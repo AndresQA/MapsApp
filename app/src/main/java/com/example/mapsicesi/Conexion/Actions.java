@@ -2,6 +2,7 @@ package com.example.mapsicesi.Conexion;
 
 import com.example.mapsicesi.Models.Hueco;
 import com.example.mapsicesi.Models.Usuario;
+import com.google.android.gms.maps.model.Circle;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -14,6 +15,7 @@ public class Actions {
 
     private HTTPSWebUtilDomi https;
     private Gson gson;
+    private ArrayList<Hueco> huecos;
 
 
     public static String URL_PROYECT = "https://aplicaciones-moviles-401f9.firebaseio.com/";
@@ -24,6 +26,8 @@ public class Actions {
     public Actions(){
         https = new HTTPSWebUtilDomi();
         gson = new Gson();
+        huecos = new ArrayList<>();
+
     }
 
     //Se pide el usuario. Si es nulo es porque no existe y se crea. Si ya existia no se crea
@@ -63,13 +67,24 @@ public class Actions {
         }).start();
     }
 
+    public void verHuecos(){
+        new Thread(()->{
+            String url =  URL_PROYECT +"/huecos.json";
+            String response = https.GETrequest(url);
+            Type type = new TypeToken<HashMap<String, Hueco>>(){}.getType();
+            HashMap<String, Hueco> huecosJson = gson.fromJson(response, type);
+            ArrayList<Hueco> outputs = new ArrayList<>();
+            huecosJson.forEach( (key, value) -> outputs.add(value) );
+        }).start();
+    }
+
 
     public void createHueco(final Hueco hueco){
         new Thread(
                 new Runnable() {
                     @Override
                     public void run() {
-                        String url = URL_PROYECT + "/chats/"+hueco.getuId()+".json";
+                        String url = URL_PROYECT + "/huecos/"+hueco.getuId()+".json";
                         //https.PUTrequest(url,gson.toJson(chat));
                         String response = https.GETrequest(url);
 

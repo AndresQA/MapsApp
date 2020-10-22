@@ -11,18 +11,21 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mapsicesi.Conexion.Actions;
+import com.example.mapsicesi.Models.Hueco;
 import com.example.mapsicesi.Models.Usuario;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.internal.ICameraUpdateFactoryDelegate;
+import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -34,7 +37,7 @@ import com.google.maps.android.SphericalUtil;
 import java.util.ArrayList;
 import java.util.UUID;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener, GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener, GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener, View.OnClickListener {
 
     private GoogleMap mMap;
     private String user;
@@ -44,6 +47,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Button addBtn;
     private TextView distTxt;
     private Actions conexion;
+    private float latitud;
+    private float longitud;
+    private ArrayList<Circle> huecos;
+
+
+
     //lugares
 
     private Polygon d1;
@@ -60,6 +69,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         points = new ArrayList<>();
+        huecos = new ArrayList<>();
         addBtn = findViewById(R.id.addBtn);
         distTxt = findViewById(R.id.distTxt);
 
@@ -88,9 +98,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         addBtn.setOnClickListener(
                 (v)->{
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(me.getPosition(), 8));
+
                 }
         );
 
+        addBtn.setOnClickListener(this);
         d1 = mMap.addPolygon(
                 new PolygonOptions()
                         .add(new LatLng(3.260096638907622, -76.54445674270391))
@@ -129,6 +141,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void updateMyLocation(Location location){
         LatLng myPos = new LatLng(location.getLatitude(), location.getLongitude());
+
+        latitud = (float) location.getLatitude();
+        longitud = (float) location.getLongitude();
 
         if (me == null){
            me = mMap.addMarker(new MarkerOptions().position(myPos).title("Aqui tas"));
@@ -200,4 +215,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         marker.showInfoWindow();
         return true;
     }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.addBtn:
+                //String userView, String uId, float latitud, float longitud, boolean verificado)
+                // verificar que la posicion haya cambiado
+                String uId = UUID.randomUUID().toString();
+               Hueco hueco =  new Hueco(user, uId, latitud, longitud, false);
+               conexion.createHueco(hueco);
+                break;
+        }
+
+    }
+
 }
