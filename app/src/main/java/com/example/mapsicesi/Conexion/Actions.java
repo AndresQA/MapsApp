@@ -1,7 +1,12 @@
 package com.example.mapsicesi.Conexion;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import com.example.mapsicesi.Models.Hueco;
 import com.example.mapsicesi.Models.Usuario;
+import com.example.mapsicesi.Observers.OnReadHuecos;
 import com.google.android.gms.maps.model.Circle;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -9,6 +14,7 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Observer;
 
 
 public class Actions {
@@ -16,6 +22,7 @@ public class Actions {
     private HTTPSWebUtilDomi https;
     private Gson gson;
     private ArrayList<Hueco> huecos;
+    private OnReadHuecos observerHuecos;
 
 
     public static String URL_PROYECT = "https://aplicaciones-moviles-401f9.firebaseio.com/";
@@ -28,6 +35,10 @@ public class Actions {
         gson = new Gson();
         huecos = new ArrayList<>();
 
+    }
+
+    public void setObserverHuecos(OnReadHuecos observerHuecos) {
+        this.observerHuecos = observerHuecos;
     }
 
     //Se pide el usuario. Si es nulo es porque no existe y se crea. Si ya existia no se crea
@@ -74,7 +85,15 @@ public class Actions {
             Type type = new TypeToken<HashMap<String, Hueco>>(){}.getType();
             HashMap<String, Hueco> huecosJson = gson.fromJson(response, type);
             ArrayList<Hueco> outputs = new ArrayList<>();
-            huecosJson.forEach( (key, value) -> outputs.add(value) );
+            for (int i = 0 ; i < huecosJson.size(); i++){
+                    Hueco value = huecosJson.get(i);
+                outputs.add(value);
+            }
+
+            this.huecos = outputs;
+            if (this.observerHuecos != null){
+                this.observerHuecos.getAllData(huecos);
+            }
         }).start();
     }
 

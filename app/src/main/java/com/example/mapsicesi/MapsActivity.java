@@ -1,6 +1,8 @@
 package com.example.mapsicesi;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.UiThread;
 import androidx.fragment.app.FragmentActivity;
 
 import android.annotation.SuppressLint;
@@ -9,6 +11,7 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -20,12 +23,14 @@ import android.widget.Toast;
 import com.example.mapsicesi.Conexion.Actions;
 import com.example.mapsicesi.Models.Hueco;
 import com.example.mapsicesi.Models.Usuario;
+import com.example.mapsicesi.Observers.OnReadHuecos;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.internal.ICameraUpdateFactoryDelegate;
 import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -37,7 +42,13 @@ import com.google.maps.android.SphericalUtil;
 import java.util.ArrayList;
 import java.util.UUID;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener, GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener, View.OnClickListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
+        LocationListener,
+        GoogleMap.OnMapClickListener,
+        GoogleMap.OnMapLongClickListener,
+        GoogleMap.OnMarkerClickListener,
+        View.OnClickListener,
+        OnReadHuecos {
 
     private GoogleMap mMap;
     private String user;
@@ -61,7 +72,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        conexion = new Actions();
+
 
         user = getIntent().getExtras().getString("user");
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -119,6 +130,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMapClickListener(this);
         mMap.setOnMapLongClickListener(this);
         mMap.setOnMarkerClickListener(this);
+
+        conexion = new Actions();
+        conexion.setObserverHuecos(this);
+            conexion.verHuecos();
+
     }
 
     public void setInitialPos(){
@@ -230,4 +246,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    @Override
+    public void getAllData(ArrayList<Hueco> huecos) {
+
+        runOnUiThread(()->{
+            for (int i = 0 ; i < huecos.size() ; i++){
+                Hueco hueco = huecos.get(i);
+                mMap.addCircle(new CircleOptions().fillColor(Color.RED).center(new LatLng(hueco.getLatitud(), hueco.getLongitud())).radius(10));
+            }
+        });
+
+    }
 }
