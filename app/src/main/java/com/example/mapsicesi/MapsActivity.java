@@ -134,7 +134,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         conexion = new Actions();
         conexion.setObserverHuecos(this);
             conexion.verHuecos();
-
     }
 
     public void setInitialPos(){
