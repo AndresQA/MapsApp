@@ -3,11 +3,14 @@ package com.example.mapsicesi;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.UiThread;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.FragmentActivity;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -21,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mapsicesi.Conexion.Actions;
+import com.example.mapsicesi.Models.AdminHueco;
 import com.example.mapsicesi.Models.Hueco;
 import com.example.mapsicesi.Models.Usuario;
 import com.example.mapsicesi.Observers.OnReadHuecos;
@@ -39,7 +43,10 @@ import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.maps.android.PolyUtil;
 import com.google.maps.android.SphericalUtil;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
@@ -56,12 +63,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Marker me;
     private ArrayList<Marker> points;
     private Button addBtn;
+    private ConstraintLayout avisar;
+    private Button agregar_hueco_Btn;
+    private Button cancelarBtn;
+    private TextView coordenadas;
+    private TextView direccion;
     private TextView distTxt;
     private Actions conexion;
     private float latitud;
     private float longitud;
-    private ArrayList<Circle> huecos;
-
+    private Button confirmarBtn;
+    private AdminHueco huecoMasCerca;
+    private ArrayList<AdminHueco> huecos;
 
 
     //lugares
@@ -83,7 +96,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         huecos = new ArrayList<>();
         addBtn = findViewById(R.id.addBtn);
         distTxt = findViewById(R.id.distTxt);
+        avisar = findViewById(R.id.avisar);
+        agregar_hueco_Btn = findViewById(R.id.agregar_hueco_Btn);
+        cancelarBtn = findViewById(R.id.cancelarBtn);
+        coordenadas = findViewById(R.id.coordenadas);
+        direccion = findViewById(R.id.direccion);
+        confirmarBtn = findViewById(R.id.confirmarBtn);
 
+        agregar_hueco_Btn.setOnClickListener(this);
+        cancelarBtn.setOnClickListener(this);
+        confirmarBtn.setOnClickListener(this);
+
+        conexion = new Actions();
+        conexion.setObserverHuecos(this);
         manager = (LocationManager) getSystemService(LOCATION_SERVICE);
         String uId = UUID.randomUUID().toString();
         conexion.registerUserIfNotExists(new Usuario(uId, user));
@@ -131,9 +156,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMapLongClickListener(this);
         mMap.setOnMarkerClickListener(this);
 
-        conexion = new Actions();
-        conexion.setObserverHuecos(this);
-            conexion.verHuecos();
+        Toast.makeText(this, "mapa cargado", Toast.LENGTH_SHORT).show();
+        conexion.leerHuecos();
     }
 
     public void setInitialPos(){
@@ -150,7 +174,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (iamAtD1){
             addBtn.setText("Estas parao en el D1");
         }else{
-            addBtn.setText("Ahi no esta el D1 care verga");
+           // addBtn.setText("Ahi no esta el D1 care verga");
         }
     }
 
@@ -165,9 +189,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }else {
             me.setPosition(myPos);
         }
-        //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myPos, 17));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myPos, 17));
 
-        computeDistances();
+       // computeDistances();
+    }
+
+    public void computedDistancesHuecos(){
+
+        double dismin = -1;
+        int index = -1;
+
+        for(int i = 0; i < this.huecos.size(); i++){
+            AdminHueco hueco = this.huecos.get(i);
+
+            if(hueco.getHueco().isVerificado() == false){
+                LatLng huecoPos = hueco.getHuecoView().getCenter();
+                LatLng meLoc = me.getPosition();
+
+                double meters = SphericalUtil.computeDistanceBetween(huecoPos, meLoc);
+
+                if(dismin == -1 || meters < dismin){
+                    dismin = meters;
+                    index = i;
+                }
+            }
+        }
+
+        if(index != -1){
+            this.distTxt.setText("Hueco a " + Math.round(dismin) + " M");
+            if(dismin < 40){
+                this.huecoMasCerca = this.huecos.get(index);
+                this.confirmarBtn.setVisibility(View.VISIBLE);
+            }else{
+                this.huecoMasCerca = null;
+                this.confirmarBtn.setVisibility(View.INVISIBLE);
+
+            }
+        }else{
+            this.huecoMasCerca = null;
+            this.confirmarBtn.setVisibility(View.INVISIBLE);
+            this.distTxt.setText("No hay huecos");
+        }
     }
 
     private void computeDistances() {
@@ -236,10 +298,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         switch (v.getId()) {
             case R.id.addBtn:
                 //String userView, String uId, float latitud, float longitud, boolean verificado)
+                this.mostrarPopUp();
+                break;
+
+            case R.id.cancelarBtn:
+                this.ocultarPopUp();
+                break;
+
+            case R.id.agregar_hueco_Btn:
                 // verificar que la posicion haya cambiado
                 String uId = UUID.randomUUID().toString();
-               Hueco hueco =  new Hueco(user, uId, latitud, longitud, false);
-               conexion.createHueco(hueco);
+                Hueco hueco =  new Hueco(user, uId, latitud, longitud, false);
+                conexion.createHueco(hueco);
+                Circle marcadorHueco = mMap.addCircle(new CircleOptions().fillColor(Color.RED).center(new LatLng(hueco.getLatitud(), hueco.getLongitud())).radius(10));
+                AdminHueco huecoObj = new AdminHueco(hueco, marcadorHueco);
+                this.huecos.add(huecoObj);
+                this.ocultarPopUp();
+                break;
+
+            case R.id.confirmarBtn:
+                huecoMasCerca.getHueco().setVerificado(true);
+                conexion.huecoValidar(huecoMasCerca);
+                this.UpdateColorHueco(huecoMasCerca);
                 break;
         }
 
@@ -249,11 +329,80 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void getAllData(ArrayList<Hueco> huecos) {
 
         runOnUiThread(()->{
+            Toast.makeText(this, "obteniendo huecos", Toast.LENGTH_SHORT).show();
             for (int i = 0 ; i < huecos.size() ; i++){
+                int index = -1;
                 Hueco hueco = huecos.get(i);
-                mMap.addCircle(new CircleOptions().fillColor(Color.RED).center(new LatLng(hueco.getLatitud(), hueco.getLongitud())).radius(10));
+                for (int j = 0 ; j < this.huecos.size() ; j++){
+                    AdminHueco ref = this.huecos.get(j);
+                    if (ref.getHueco().getuId() == hueco.getuId()){
+                        index = j;
+                        j = this.huecos.size();
+                    }
+
+                }
+                if (index != -1){
+                    AdminHueco ref = this.huecos.get(index);
+                    ref.getHueco().setVerificado(hueco.isVerificado());
+                    this.UpdateColorHueco(ref);
+                }else{
+
+                    Circle marcadorHueco = mMap.addCircle(new CircleOptions().fillColor(Color.RED).center(new LatLng(hueco.getLatitud(), hueco.getLongitud())).radius(10));
+                    AdminHueco huecoObj = new AdminHueco(hueco, marcadorHueco);
+                    this.UpdateColorHueco(huecoObj);
+                    this.huecos.add(huecoObj);
+
+                }
             }
+            this.computedDistancesHuecos();
+
         });
 
+
+
     }
+
+    public void UpdateColorHueco(AdminHueco ref){
+        if (ref.getHueco().isVerificado()) {
+            ref.getHuecoView().setFillColor(Color.GREEN);
+        }else {
+            ref.getHuecoView().setFillColor(Color.RED);
+        }
+    }
+
+
+    public String getDireccion(double latitud, double longitud){
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        String direccion = "No hay una dirección especifica";
+        try {
+            List<Address> direcciones = geocoder.getFromLocation(latitud, longitud, 1);
+            for (int i = 0; i < direcciones.size(); i++){
+                if(direccion == "No hay una dirección especifica"){
+                    Address dir = direcciones.get(i);
+                    direccion = dir.getAddressLine(0).toString();
+                }
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return  direccion;
+    }
+
+
+    public void mostrarPopUp(){
+        this.avisar.setVisibility(View.VISIBLE);
+        String cordenadasseteadas = this.latitud+" , " + this.longitud;
+        String direccionseteada = this.getDireccion(this.latitud, this.longitud);
+        this.direccion.setText(direccionseteada);
+        this.coordenadas.setText(cordenadasseteadas);
+    }
+
+    public void ocultarPopUp(){
+        this.avisar.setVisibility(View.INVISIBLE);
+
+    }
+
+
 }
