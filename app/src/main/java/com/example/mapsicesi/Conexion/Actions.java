@@ -99,9 +99,9 @@ public class Actions {
 
             while (this.actualizar){
                 try {
-                    Thread.sleep(8000);
                     this.verHuecos();
                     this.verUsuarios();
+                    Thread.sleep(8000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

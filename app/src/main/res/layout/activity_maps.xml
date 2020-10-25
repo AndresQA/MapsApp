@@ -82,7 +82,7 @@
             android:id="@+id/textView5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="24dp"
             android:text="Coordenadas:"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -123,19 +123,24 @@
             android:gravity="center"
             android:text="00000000, 0000000"
             android:textSize="14sp"
-            app:layout_constraintTop_toBottomOf="@+id/textView5"
-            tools:layout_editor_absoluteX="33dp" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.162"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView5" />
 
         <TextView
             android:id="@+id/direccion"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
             android:layout_marginTop="8dp"
+            android:layout_marginEnd="32dp"
             android:gravity="center"
             android:text="Calle 0 No. 0 0 0"
+            android:textAlignment="textStart"
             android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.145"
+            app:layout_constraintHorizontal_bias="0.03"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView3" />
 

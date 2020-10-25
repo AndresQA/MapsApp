@@ -5,6 +5,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.FragmentActivity;
 
 import android.annotation.SuppressLint;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
@@ -29,6 +30,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -411,11 +413,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    public String getDireccion(double latitud, double longitud){
+    public String getDireccion(double posLatitud, double posLongitud){
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         String direccion = "No hay una dirección especifica";
         try {
-            List<Address> direcciones = geocoder.getFromLocation(latitud, longitud, 1);
+            List<Address> direcciones = geocoder.getFromLocation(posLatitud, posLongitud, 1);
             for (int i = 0; i < direcciones.size(); i++){
                 if(direccion == "No hay una dirección especifica"){
                     Address dir = direcciones.get(i);
@@ -453,7 +455,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             for (int i = 0 ; i<usuarios.size() ; i++){
                 Usuario u = usuarios.get(i);
                 if (this.usuarios.get(u.getuId()) == null){
-                    Marker marcador = this.mMap.addMarker(new MarkerOptions().position(new LatLng(u.getLatitud(), u.getLongitud())));
+                    Marker marcador;
+                    if (u.getNombre().equals(this.user)){
+                        marcador = this.mMap.addMarker(new MarkerOptions().position(new LatLng(u.getLatitud(), u.getLongitud())));
+                    }else{
+                        MarkerOptions mcolor = new MarkerOptions().position(new LatLng(u.getLatitud(), u.getLongitud()));
+                        mcolor.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+                        marcador = this.mMap.addMarker(mcolor);
+                    }
+
                     AdminUsuario nuevoUsuario = new AdminUsuario(u, marcador);
                     this.usuarios.put(u.getuId(), nuevoUsuario);
                 }else {
@@ -476,4 +486,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             this.updatePosMarcador(me.getLatitud(), me.getLongitud());
         });
     }
+
 }
