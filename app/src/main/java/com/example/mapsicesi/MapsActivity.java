@@ -244,7 +244,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         for(int i = 0; i < this.huecos.size(); i++){
             AdminHueco hueco = this.huecos.get(i);
 
-            if(hueco.getHueco().isVerificado() == false){
                 LatLng huecoPos = hueco.getHuecoView().getCenter();
                 LatLng meLoc = me.getUsuarioMarcador().getPosition();
 
@@ -254,7 +253,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     dismin = meters;
                     index = i;
                 }
-            }
+
         }
 
         if(index != -1){
