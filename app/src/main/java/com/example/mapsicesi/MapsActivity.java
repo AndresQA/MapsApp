@@ -1,38 +1,34 @@
 package com.example.mapsicesi;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.annotation.UiThread;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.FragmentActivity;
 
 import android.annotation.SuppressLint;
-import android.app.Notification;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mapsicesi.Conexion.Actions;
 import com.example.mapsicesi.Models.AdminHueco;
+import com.example.mapsicesi.Models.AdminUsuario;
 import com.example.mapsicesi.Models.Hueco;
 import com.example.mapsicesi.Models.Usuario;
 import com.example.mapsicesi.Observers.OnReadHuecos;
+import com.example.mapsicesi.Observers.OnReadUsuarios;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.internal.ICameraUpdateFactoryDelegate;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -45,6 +41,7 @@ import com.google.maps.android.SphericalUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -55,12 +52,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         GoogleMap.OnMapLongClickListener,
         GoogleMap.OnMarkerClickListener,
         View.OnClickListener,
-        OnReadHuecos {
+        OnReadHuecos,
+        OnReadUsuarios {
 
     private GoogleMap mMap;
     private String user;
     private LocationManager manager;
-    private Marker me;
+    private AdminUsuario me;
     private ArrayList<Marker> points;
     private Button addBtn;
     private ConstraintLayout avisar;
@@ -75,6 +73,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Button confirmarBtn;
     private AdminHueco huecoMasCerca;
     private ArrayList<AdminHueco> huecos;
+    private HashMap<String, AdminUsuario> usuarios;
 
 
     //lugares
@@ -87,6 +86,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_maps);
 
 
+
         user = getIntent().getExtras().getString("user");
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -94,6 +94,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
         points = new ArrayList<>();
         huecos = new ArrayList<>();
+        usuarios = new HashMap<>();
         addBtn = findViewById(R.id.addBtn);
         distTxt = findViewById(R.id.distTxt);
         avisar = findViewById(R.id.avisar);
@@ -107,11 +108,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         cancelarBtn.setOnClickListener(this);
         confirmarBtn.setOnClickListener(this);
 
-        conexion = new Actions();
-        conexion.setObserverHuecos(this);
+        this.conexion = new Actions();
+        this.conexion.setObserverHuecos(this);
+        this.conexion.setObserverUsuarios(this);
+
         manager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        String uId = UUID.randomUUID().toString();
-        conexion.registerUserIfNotExists(new Usuario(uId, user));
+
+
+
+
+        this.me = new AdminUsuario();
     }
 
     /**
@@ -133,7 +139,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setInitialPos();
         addBtn.setOnClickListener(
                 (v)->{
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(me.getPosition(), 8));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(me.getUsuarioMarcador().getPosition(), 8));
 
                 }
         );
@@ -157,6 +163,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMarkerClickListener(this);
 
         Toast.makeText(this, "mapa cargado", Toast.LENGTH_SHORT).show();
+
+      //  this.conexion.getPrimeraposicion(this.me);
+        String uId = UUID.randomUUID().toString();
+        this.conexion.registerUserIfNotExists(new Usuario(uId, user, 0, 0));
         conexion.leerHuecos();
     }
 
@@ -179,19 +189,49 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void updateMyLocation(Location location){
+        this.updatePosMarcador(location.getLatitude(), location.getLongitude());
+        /*
         LatLng myPos = new LatLng(location.getLatitude(), location.getLongitude());
 
         latitud = (float) location.getLatitude();
         longitud = (float) location.getLongitude();
 
-        if (me == null){
-           me = mMap.addMarker(new MarkerOptions().position(myPos).title("Aqui tas"));
+        if (me.getUsuarioMarcador() == null){
+            Marker yo = this.mMap.addMarker(new MarkerOptions().position(myPos).title("Aqui tas"));
+            me.setUsuarioMarcador(yo);
         }else {
-            me.setPosition(myPos);
+            me.getUsuarioMarcador().setPosition(myPos);
+        }
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myPos, 17));
+        this.me.getDataBaseUsuarios().setLatitud(latitud);
+        this.me.getDataBaseUsuarios().setLongitud(longitud);
+        this.conexion.updateMyLocation(this.me.getDataBaseUsuarios());
+        */
+
+
+       // computeDistances();
+    }
+
+    private void updatePosMarcador(double latitud, double longitud){
+
+        this.latitud = (float) latitud;
+        this.longitud = (float) longitud;
+        LatLng myPos = new LatLng(latitud, longitud);
+
+        if (me.getUsuarioMarcador() == null){
+            Marker yo = this.mMap.addMarker(new MarkerOptions().position(myPos).title("Aqui tas"));
+            me.setUsuarioMarcador(yo);
+        }else {
+            me.getUsuarioMarcador().setPosition(myPos);
         }
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myPos, 17));
 
-       // computeDistances();
+        if(this.me.getDataBaseUsuarios() != null){
+            this.me.getDataBaseUsuarios().setLatitud(latitud);
+            this.me.getDataBaseUsuarios().setLongitud(longitud);
+            this.conexion.updateMyLocation(this.me.getDataBaseUsuarios());
+        }
+
     }
 
     public void computedDistancesHuecos(){
@@ -204,7 +244,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             if(hueco.getHueco().isVerificado() == false){
                 LatLng huecoPos = hueco.getHuecoView().getCenter();
-                LatLng meLoc = me.getPosition();
+                LatLng meLoc = me.getUsuarioMarcador().getPosition();
 
                 double meters = SphericalUtil.computeDistanceBetween(huecoPos, meLoc);
 
@@ -236,7 +276,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         for (int i=0 ; i<points.size() ; i++){
             Marker marker = points.get(i);
             LatLng markerLoc = marker.getPosition();
-            LatLng meLoc = me.getPosition();
+            LatLng meLoc = me.getUsuarioMarcador().getPosition();
 
             double meters = SphericalUtil.computeDistanceBetween(markerLoc, meLoc);
             Log.e(">>>>", "Metros: a marcador " + i + ": " + meters + "m");
@@ -249,7 +289,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             double distanceToD1 = 1000000000;
             for (int i = 0; i < d1.getPoints().size(); i++) {
                 LatLng punto = d1.getPoints().get(i);
-                double meters = SphericalUtil.computeDistanceBetween(punto, me.getPosition());
+                double meters = SphericalUtil.computeDistanceBetween(punto, me.getUsuarioMarcador().getPosition());
 
                 distanceToD1 = Math.min(meters, distanceToD1);
 
@@ -404,5 +444,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    //obtenemos los usuarios
+    @Override
+    public void getAllUsuarios(ArrayList<Usuario> usuarios) {
 
+        runOnUiThread(()->{
+
+            for (int i = 0 ; i<usuarios.size() ; i++){
+                Usuario u = usuarios.get(i);
+                if (this.usuarios.get(u.getuId()) == null){
+                    Marker marcador = this.mMap.addMarker(new MarkerOptions().position(new LatLng(u.getLatitud(), u.getLongitud())));
+                    AdminUsuario nuevoUsuario = new AdminUsuario(u, marcador);
+                    this.usuarios.put(u.getuId(), nuevoUsuario);
+                }else {
+                    AdminUsuario obtenerUser = this.usuarios.get(u.getuId());
+                    if (obtenerUser.getDataBaseUsuarios().getLongitud() != u.getLongitud() && obtenerUser.getDataBaseUsuarios().getLatitud() != u.getLatitud()){
+                        obtenerUser.getUsuarioMarcador().setPosition(new LatLng(u.getLatitud(), u.getLongitud()));
+                    }
+                }
+
+            }
+
+        });
+
+    }
+
+    @Override
+    public void getMyUbicacion(Usuario me) {
+        runOnUiThread(()-> {
+            this.me.setDataBaseUsuarios(me);
+            this.updatePosMarcador(me.getLatitud(), me.getLongitud());
+        });
+    }
 }

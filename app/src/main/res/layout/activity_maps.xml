@@ -31,7 +31,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Distancia al D1"
+        android:text="Hueco a..."
+        android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/map" />
@@ -51,7 +52,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/avisar"
         android:layout_width="335dp"
-        android:layout_height="609dp"
+        android:layout_height="309dp"
         android:background="#FFFFFF"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -62,21 +63,18 @@
 
         <TextView
             android:id="@+id/ali"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_centerHorizontal="false"
             android:layout_centerVertical="false"
-            android:layout_marginStart="7dp"
-            android:layout_marginTop="40dp"
-            android:layout_marginEnd="7dp"
-            android:layout_marginBottom="53dp"
+            android:layout_marginTop="16dp"
             android:gravity="center"
-            android:text="Agregar un hueco"
+            android:text="¿Viste un hueco?"
             android:textAlignment="center"
-            android:textSize="30sp"
+            android:textSize="24sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@+id/textView5"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.496"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -84,65 +82,60 @@
             android:id="@+id/textView5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="19dp"
+            android:layout_marginTop="16dp"
             android:text="Coordenadas:"
-            android:textSize="24sp"
+            android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@+id/coordenadas"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.152"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/ali" />
+            app:layout_constraintTop_toBottomOf="@+id/direccion" />
 
         <TextView
             android:id="@+id/textView3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
             android:text="Dirección:"
-            android:textSize="24sp"
+            android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@+id/direccion"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.129"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/coordenadas" />
+            app:layout_constraintTop_toBottomOf="@+id/ali" />
 
         <Button
             android:id="@+id/agregar_hueco_Btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="13dp"
-            android:layout_marginEnd="4dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="40dp"
             android:text="Agregar"
-            app:layout_constraintBaseline_toBaselineOf="@+id/cancelarBtn"
-            app:layout_constraintEnd_toStartOf="@+id/cancelarBtn"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/coordenadas" />
 
         <TextView
             android:id="@+id/coordenadas"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginStart="33dp"
-            android:layout_marginEnd="33dp"
-            android:layout_marginBottom="21dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:gravity="center"
             android:text="00000000, 0000000"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toTopOf="@+id/textView3"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView5" />
+            android:textSize="14sp"
+            app:layout_constraintTop_toBottomOf="@+id/textView5"
+            tools:layout_editor_absoluteX="33dp" />
 
         <TextView
             android:id="@+id/direccion"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginStart="33dp"
-            android:layout_marginEnd="33dp"
-            android:layout_marginBottom="81dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:gravity="center"
             android:text="Calle 0 No. 0 0 0"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toTopOf="@+id/cancelarBtn"
+            android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.145"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView3" />
 
@@ -150,12 +143,14 @@
             android:id="@+id/cancelarBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="74dp"
+            android:layout_marginTop="40dp"
+            android:layout_marginEnd="32dp"
             android:text="Cancelar"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.756"
             app:layout_constraintStart_toEndOf="@+id/agregar_hueco_Btn"
-            app:layout_constraintTop_toBottomOf="@+id/direccion" />
+            app:layout_constraintTop_toBottomOf="@+id/coordenadas" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
